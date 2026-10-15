@@ -36,6 +36,29 @@ Comanda reg;
          << setw(20) << "CANT. PRODUCTOS" 
          << setw(15) << "TOTAL COMISION" << endl;
     cout << "--------------------------------------------------" << endl;
+
+    if (fread(&reg, sizeof(Comanda), 1, pArch) == 1) {
+        while (!feof(pArch)) {
+            int mozoActual = reg.idMozo;
+            int cantProductosMozo = 0;
+            float totalComisionMozo = 0.0f;
+
+            while (!feof(pArch) && reg.idMozo == mozoActual) {
+                cantProductosMozo += reg.cantidad;
+                totalComisionMozo += reg.comision;
+                fread(&reg, sizeof(Comanda), 1, pArch);
+            }
+
+            cout << left << setw(10) << mozoActual 
+                 << setw(20) << cantProductosMozo 
+                 << "$ " << fixed << setprecision(2) << totalComisionMozo << endl;
+
+            totalProductosBuffet += cantProductosMozo;
+        }
+    } else {
+        cout << "\nEl archivo de la semana está vacío o no contiene comandas." << endl;
+    }
+    
     fclose(pArch);
     
     return 0;
