@@ -13,5 +13,23 @@ struct Comanda {
 };
 
 int main() {
+    char nombreArchivo[50];
+
+    cout << "========================================" << endl;
+    cout << "    RESUMEN DE CIERRE SEMANAL           " << endl;
+    cout << "========================================" << endl;
+    cout << "Ingrese el nombre del archivo semanal (ej: comandas_semana_s1-06.dat): ";
+    cin >> nombreArchivo;
+
+    FILE* pArch = fopen(nombreArchivo, "rb");
+
+    if (pArch == NULL) {
+        cout << "\nError: No se pudo abrir el archivo '" << nombreArchivo << "'." << endl;
+        cout << "Verifique que el archivo exista y vuelva a intentarlo." << endl;
+        return 1;
+    }
+
+    fclose(pArch);
+    
     return 0;
 }
