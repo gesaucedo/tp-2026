@@ -10,7 +10,7 @@ struct ComandaHistorica {
     int codigoProducto;
     int cantidad;
     float comision;
-    char relleno[3];
+    //char relleno[3];
 };
 
 struct Producto {
