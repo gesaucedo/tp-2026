@@ -3,3 +3,5 @@
 ## Integrantes del Grupo:
 
   -Gerónimo José Saucedo (gesaucedo)
+
+  -Farina Lautaro ( flautaro-ops)
