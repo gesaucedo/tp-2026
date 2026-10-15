@@ -28,7 +28,14 @@ int main() {
         cout << "Verifique que el archivo exista y vuelva a intentarlo." << endl;
         return 1;
     }
+Comanda reg;
+    int totalProductosBuffet = 0;
 
+    cout << "\n--------------------------------------------------" << endl;
+    cout << left << setw(10) << "ID MOZO" 
+         << setw(20) << "CANT. PRODUCTOS" 
+         << setw(15) << "TOTAL COMISION" << endl;
+    cout << "--------------------------------------------------" << endl;
     fclose(pArch);
     
     return 0;
