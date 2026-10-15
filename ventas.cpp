@@ -30,12 +30,26 @@ struct Comanda {
     float comision;
 };
 
+//Nodo para lista ordenar las comandas de los mozos 
+struct Nodo {
+    Comanda info;
+    Nodo* sig;
+};
+
 //Declaracion de funciones
 void cifrar(char pssw[]);
 int login(FILE* fMozos);
 long buscarProducto(FILE* f, int codigo, Producto& p);
 void cargarVenta(int idMozo, FILE* f, FILE* fInv);
+//func. para ordenar planilla
+Nodo* crearNodo(Comanda valor);
+Nodo* insertarOrdenado(Nodo* inicio, Comanda valor);
+void liberar(Nodo*& p);
+void ordenarPlanilla(const char* planilla);
 
+//prueba mock
+void mostrarPlanilla(const char* planilla);
+//fin prueba mock
 
 int main() {
 
@@ -102,7 +116,9 @@ int main() {
     fclose(fInv);
 
 //Planilla ordenada por mozo.
-     
+    //mostrarPlanilla(planilla);
+    ordenarPlanilla(planilla);
+   //mostrarPlanilla(planilla);
      
     return 0;
 }
@@ -228,4 +244,108 @@ void cargarVenta(int idMozo, FILE* f, FILE* fInv) {
     fwrite(&p, sizeof(Producto), 1, fInv);
 
     cout << "Venta cargada. Comision: " << c.comision << endl;
+}
+
+
+//prueba
+void mostrarPlanilla(const char* planilla) {
+    FILE* f = fopen(planilla, "rb");
+    if (f == NULL) {
+        cout << "No se pudo abrir la planilla para mostrarla." << endl;
+        return;
+    }
+
+    cout << endl;
+    cout << "===== PLANILLA " << planilla << " =====" << endl;
+    printf("%-6s %-9s %-9s %s\n", "Mozo", "Producto", "Cantidad", "Comision");
+
+    Comanda c;
+    int total = 0;
+    while (fread(&c, sizeof(Comanda), 1, f) == 1) {
+        printf("%-6d %-9d %-9d %.2f\n", c.idMozo, c.codigoProducto, c.cantidad, c.comision);
+        total++;
+    }
+    fclose(f);
+
+    if (total == 0) {
+        cout << "(la planilla no tiene ventas)" << endl;
+    } else {
+        cout << total << " venta(s) en la planilla." << endl;
+    }
+}
+
+//fin prueba mock
+
+Nodo* crearNodo(Comanda valor) {
+    Nodo* nuevoNodo = new Nodo();
+    nuevoNodo->info = valor;
+    nuevoNodo->sig = NULL;
+    return nuevoNodo;
+}
+
+// Insercion ordenada por idMozo (del apunte). Devuelve el inicio de la lista.
+Nodo* insertarOrdenado(Nodo* inicio, Comanda valor) {
+    Nodo* nuevoNodo = crearNodo(valor);
+
+    // Caso especial: lista vacia o el valor va primero
+    if (inicio == NULL || valor.idMozo < inicio->info.idMozo) {
+        nuevoNodo->sig = inicio;
+        return nuevoNodo;
+    }
+
+    Nodo* actual = inicio;
+    while (actual->sig != NULL && actual->sig->info.idMozo <= valor.idMozo) {
+        actual = actual->sig;
+    }
+    nuevoNodo->sig = actual->sig;
+    actual->sig = nuevoNodo;
+    return inicio;
+}
+
+// Liberar toda la memoria de la lista (del apunte)
+void liberar(Nodo*& p) {
+    Nodo* aux;
+    while (p != NULL) {
+        aux = p;
+        p = p->sig;
+        delete aux;
+    }
+}
+
+void ordenarPlanilla(const char* planilla) {
+    
+    FILE* f = fopen(planilla, "rb");
+    if (f == NULL) {
+        cout << "No hay planilla para ordenar." << endl;
+        return;
+    }
+
+    Nodo* lista = NULL;
+    Comanda comanda;
+    while (fread(&comanda, sizeof(Comanda), 1, f) == 1) {
+        lista = insertarOrdenado(lista, comanda);
+    }
+    fclose(f);
+
+    if (lista == NULL) {                   // planilla vacia: no hay nada que ordenar
+        return;
+    }
+
+    //Reescribir la planilla recorriendo la lista (ya esta ordenada)
+    f = fopen(planilla, "wb");
+    if (f == NULL) {
+        cout << "No se pudo reescribir la planilla." << endl;
+        liberar(lista);
+        return;
+    }
+    Nodo* actual = lista;
+    while (actual != NULL) {
+        fwrite(&actual->info, sizeof(Comanda), 1, f);
+        actual = actual->sig;
+    }
+    fclose(f);
+
+    //Libera la memoria de la lista
+    liberar(lista);
+    cout << "Planilla ordenada por mozo." << endl;
 }
