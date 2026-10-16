@@ -80,3 +80,38 @@ int fechaYaGuardada(char fechas[][11], int cant, const char* fecha) {
     }
     return 0;
 }
+
+
+void ordenarPorMozo(Comanda v[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - 1 - i; j++) {
+            if (v[j].idMozo > v[j + 1].idMozo) {
+                Comanda aux = v[j];
+                v[j] = v[j + 1];
+                v[j + 1] = aux;
+            }
+        }
+    }
+}
+
+// Búsqueda binaria directo en disco sobre inventario.dat
+int buscarProducto(FILE* f, int cantRegistros, int codigo, Producto &p) {
+    int inicio = 0;
+    int fin = cantRegistros - 1;
+
+    while (inicio <= fin) {
+        int medio = (inicio + fin) / 2;
+        fseek(f, medio * sizeof(Producto), SEEK_SET);
+        fread(&p, sizeof(Producto), 1, f);
+
+        if (p.codigo == codigo) {
+            return medio;
+        }
+        if (p.codigo < codigo) {
+            inicio = medio + 1;
+        } else {
+            fin = medio - 1;
+        }
+    }
+    return -1;
+}
