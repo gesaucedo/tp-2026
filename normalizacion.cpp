@@ -24,6 +24,23 @@ struct Mozo {
 const int K = 5;
 const int MAX_MOZOS = 100;
 
+struct Comanda {
+    int idMozo;
+    int codigoProducto;
+    int cantidad;
+    float comision;
+};
+ 
+struct Producto {
+    int codigo;
+    char descripcion[50];
+    float precio;
+    int stockActual;
+};
+const int MAX_DIAS = 400;        // días distintos que puede tener el histórico
+const int MAX_COMANDAS = 20000;  // ventas por día
+
+
 // Encriptación por corrimiento de caracteres 
 void encriptarClave(const char* origen, char* destino, int k) {
     int i = 0;
@@ -126,15 +143,22 @@ void generarPlanillasYStock(Mozo mozos[], int cantMozos) {
 
     char fechas[MAX_DIAS][11];
     int cantFechas = 0;
+    int avisoFechas = 0;
     ComandaHistorica h;
 
     // 1. Extraer todas las fechas distintas contenidas en las ventas
     while (fread(&h, sizeof(ComandaHistorica), 1, fHist) == 1) {
-        if (fechaYaGuardada(fechas, cantFechas, h.fecha) == 0 && cantFechas < MAX_DIAS) {
-            strcpy(fechas[cantFechas], h.fecha);
-            cantFechas++;
-        }
+        if (fechaYaGuardada(fechas, cantFechas, h.fecha) == 0) {
+    if (cantFechas < MAX_DIAS) {
+        strcpy(fechas[cantFechas], h.fecha);
+        cantFechas++;
+    } else if (avisoFechas == 0) {
+        cout << "Advertencia: hay mas de " << MAX_DIAS
+             << " fechas distintas; las sobrantes no generan planilla." << endl;
+        avisoFechas = 1;
     }
+}}
+
 
     FILE* fInv = fopen("inventario.dat", "r+b");
     if (fInv == NULL) {
@@ -146,44 +170,50 @@ void generarPlanillasYStock(Mozo mozos[], int cantMozos) {
     fseek(fInv, 0, SEEK_END);
     int cantProductos = ftell(fInv) / sizeof(Producto);
 
+     static Comanda dia[MAX_COMANDAS];
+
     // 2. Procesar cada día por separado
     for (int d = 0; d < cantFechas; d++) {
-        Comanda dia[MAX_COMANDAS];
+    
         int n = 0;
 
         fseek(fHist, 0, SEEK_SET);
         while (fread(&h, sizeof(ComandaHistorica), 1, fHist) == 1) {
-            if (strcmp(h.fecha, fechas[d]) == 0) {
+                if (strcmp(h.fecha, fechas[d]) == 0) {
+
+                // --- Parte 1: planilla del día ---
                 int id = buscarIdMozo(mozos, cantMozos, h.nombreMozo);
-                if (id == -1 || n == MAX_COMANDAS) {
-                    cout << "Advertencia: Venta ignorada del " << h.fecha 
-                         << " (Mozo " << h.nombreMozo << ")" << endl;
+                if (id == -1) {
+                    cout << "Advertencia: Venta ignorada del " << h.fecha
+                         << " (Mozo " << h.nombreMozo << " no existe)" << endl;
+                } else if (n == MAX_COMANDAS) {
+                    cout << "Advertencia: planilla del " << h.fecha
+                         << " llena, venta no incluida en la planilla." << endl;
                 } else {
                     dia[n].idMozo = id;
                     dia[n].codigoProducto = h.codigoProducto;
                     dia[n].cantidad = h.cantidad;
                     dia[n].comision = h.comision;
                     n++;
+                }
 
-                    // Descuento directo en el archivo inventario.dat
-                    Producto p;
-                    int pos = buscarProducto(fInv, cantProductos, h.codigoProducto, p);
-                    if (pos == -1) {
-                        cout << "Error: Producto " << h.codigoProducto << " no existe en inventario." << endl;
+                // --- Parte 2: stock (siempre, no depende de la planilla) ---
+                Producto p;
+                int pos = buscarProducto(fInv, cantProductos, h.codigoProducto, p);
+                if (pos == -1) {
+                    cout << "Error: Producto " << h.codigoProducto << " no existe en inventario." << endl;
+                } else {
+                    if (p.stockActual < h.cantidad) {
+                        cout << "Producto " << p.codigo << " sin stock suficiente, queda en 0" << endl;
+                        p.stockActual = 0;
                     } else {
-                        if (p.stockActual < h.cantidad) {
-                            cout << "Producto " << p.codigo << " sin stock suficiente, queda en 0" << endl;
-                            p.stockActual = 0;
-                        } else {
-                            p.stockActual -= h.cantidad;
-                        }
-                        fseek(fInv, pos * sizeof(Producto), SEEK_SET);
-                        fwrite(&p, sizeof(Producto), 1, fInv);
+                        p.stockActual -= h.cantidad;
                     }
+                    fseek(fInv, pos * sizeof(Producto), SEEK_SET);
+                    fwrite(&p, sizeof(Producto), 1, fInv);
                 }
             }
-        }
-
+            }
         // Ordenar la planilla del día por idMozo
         ordenarPorMozo(dia, n);
 
@@ -215,7 +245,7 @@ int main() {
         return 1;
     }
 
-    Mozo mozos[MAX_MOZOS];
+   Mozo mozos[MAX_MOZOS] = {};
     int cantMozos = 0;
     ComandaHistorica regHist;
 
