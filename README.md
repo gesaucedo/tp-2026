@@ -2,7 +2,7 @@
 
 ## Integrantes del Grupo:
 
-  -Gerónimo José Saucedo (gesaucedo)
+  -Saucedo Gerónimo José (gesaucedo) [ventas.cpp]
 
   -Farina Lautaro ( flautaro-ops)
 
