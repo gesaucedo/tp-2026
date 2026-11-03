@@ -47,9 +47,7 @@ Nodo* insertarOrdenado(Nodo* inicio, Comanda valor);
 void liberar(Nodo*& p);
 void ordenarPlanilla(const char* planilla);
 
-//prueba mock
-void mostrarPlanilla(const char* planilla);
-//fin prueba mock
+
 
 int main() {
 
@@ -116,9 +114,9 @@ int main() {
     fclose(fInv);
 
 //Planilla ordenada por mozo.
-    //mostrarPlanilla(planilla);
+    
     ordenarPlanilla(planilla);
-   //mostrarPlanilla(planilla);
+  
      
     return 0;
 }
@@ -247,34 +245,9 @@ void cargarVenta(int idMozo, FILE* f, FILE* fInv) {
 }
 
 
-//prueba
-void mostrarPlanilla(const char* planilla) {
-    FILE* f = fopen(planilla, "rb");
-    if (f == NULL) {
-        cout << "No se pudo abrir la planilla para mostrarla." << endl;
-        return;
-    }
 
-    cout << endl;
-    cout << "===== PLANILLA " << planilla << " =====" << endl;
-    printf("%-6s %-9s %-9s %s\n", "Mozo", "Producto", "Cantidad", "Comision");
 
-    Comanda c;
-    int total = 0;
-    while (fread(&c, sizeof(Comanda), 1, f) == 1) {
-        printf("%-6d %-9d %-9d %.2f\n", c.idMozo, c.codigoProducto, c.cantidad, c.comision);
-        total++;
-    }
-    fclose(f);
 
-    if (total == 0) {
-        cout << "(la planilla no tiene ventas)" << endl;
-    } else {
-        cout << total << " venta(s) en la planilla." << endl;
-    }
-}
-
-//fin prueba mock
 
 Nodo* crearNodo(Comanda valor) {
     Nodo* nuevoNodo = new Nodo();
