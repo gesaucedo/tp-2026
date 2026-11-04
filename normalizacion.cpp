@@ -51,6 +51,28 @@ void encriptarClave(const char* origen, char* destino, int k) {
     destino[i] = '\0';
 }
 
+// Convierte un entero positivo a texto, digito por digito
+void enteroATexto(int numero, char* destino) {
+    char invertido[12];
+    int cant = 0;
+
+    if (numero == 0) {
+        invertido[cant] = '0';
+        cant++;
+    }
+
+    while (numero > 0) {
+        invertido[cant] = '0' + numero % 10;  // ultimo digito
+        cant++;
+        numero = numero / 10;                 // lo descarta
+    }
+
+    // Los digitos salieron al reves: se copian de atras para adelante
+    for (int i = 0; i < cant; i++) {
+        destino[i] = invertido[cant - 1 - i];
+    }
+    destino[cant] = '\0';
+}
 int buscarOAgregarMozo(Mozo mozos[], int &cantMozos, const char* nombre, float comision) {
     for (int i = 0; i < cantMozos; i++) {
         if (strcmp(mozos[i].nombre, nombre) == 0) {
@@ -72,7 +94,7 @@ int buscarOAgregarMozo(Mozo mozos[], int &cantMozos, const char* nombre, float c
 
     // Generar clave encriptada basada en el ID
     char clavePlana[20];
-    sprintf(clavePlana, "%d", cantMozos);
+    enteroATexto(cantMozos, clavePlana);
     encriptarClave(clavePlana, mozos[pos].password, K);
 
     return cantMozos;
