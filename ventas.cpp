@@ -58,7 +58,9 @@ int main() {
     
     //habria que validar primero que haya ingrado datos y que el formato sea el correcto
     char planilla[30];
-    sprintf(planilla, "comandas_%s.dat", fecha);
+    strcpy(planilla, "comandas_");
+    strcat(planilla, fecha);
+    strcat(planilla, ".dat");
     
 //Abre o crea el archivo comanda dd-mm-aaa.dat(planilla con la fecha ingresada)
     
