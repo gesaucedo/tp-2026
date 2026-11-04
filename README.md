@@ -4,11 +4,11 @@
 
   -Saucedo Gerónimo José (gesaucedo) [ventas.cpp]
 
-  -Farina Lautaro ( flautaro-ops)[ ]
+  -Farina Lautaro ( flautaro-ops) [resumen.cpp]
 
-  -Yamil Poma (yamilpomayampasi-lgtm)[ ]
+  -Yamil Poma (yamilpomayampasi-lgtm) [normalizacion.cpp]
 
- -        ()[ ]
+  -Anddy Roque Mamani (anddy97) [cierre.cpp]
 
 
 
