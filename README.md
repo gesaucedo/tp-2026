@@ -8,7 +8,7 @@
 
   -Yamil Poma (yamilpomayampasi-lgtm)[ ]
 
- -        ()[ ]
+ - Anddy Roque Mamani (anddy97)[cierre.cpp]
 
 
 
