@@ -13,15 +13,21 @@
 
 
 
-## Como se compila:
+ ## Cómo se compila
 
-Todos los comandos se ejecutan desde la raíz del repositorio. El sistema son 4 programas independientes, cada uno con su propio main, así que se compilan por separado:
+Hace falta tener instalado el compilador `g++`. Todos los comandos se ejecutan desde la raíz del repositorio.
 
- 1. Compilar normalizacion.cpp
- 2. Compilar ventas.cpp
- 3. Compilar cierre.cpp
- 4. Compilar resumen.cpp
+El sistema son 4 programas independientes, cada uno con su propio main, así que se compilan por separado:
 
+```bash
+g++ -o normalizacion normalizacion.cpp
+g++ -o ventas        ventas.cpp
+g++ -o cierre        cierre.cpp
+g++ -o resumen       resumen.cpp
+```
+Cada comando genera un ejecutable con el nombre del programa (`normalizacion`, `ventas`, `cierre` y `resumen`). En Windows, `g++` les agrega la extensión `.exe`.
+
+No se pueden compilar todos juntos con `g++ *.cpp`, porque al haber cuatro `main` el compilador da error.
 
 ## Cómo se corre y en qué orden:
 
