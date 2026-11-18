@@ -103,8 +103,8 @@ int main() {
         if (opcion == 1) {
             int idMozo = login(fMozos);
             if (idMozo != 0) {
-                cargarVenta(idMozo, f, fInv);
-                // calcular la comision y guardar la venta con fwrite en f
+                cargarVenta(idMozo, f, fInv);   
+                // comprueba login de mozo, de ser incorrecto =0 vuelve al menu
             }
         } else if (opcion != 0) {
             cout << "Opcion invalida." << endl;
