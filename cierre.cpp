@@ -1,5 +1,7 @@
-
+#include <iostream>
 #include <cstdio>
+#include <cstring>
+using namespace std;
 
 struct Comanda {
     int idMozo;
@@ -8,20 +10,20 @@ struct Comanda {
     float comision;
 };
 
-const int DIAS_SEMANA = 7;
-
-// ---------- manejo simple de fechas ----------
+const int DIAS = 7;
 
 bool esBisiesto(int a) {
     return (a % 4 == 0 && a % 100 != 0) || (a % 400 == 0);
 }
 
 int diasDelMes(int m, int a) {
-    int d[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    if (m == 2 && esBisiesto(a)) return 29;
-    return d[m - 1];
+    int dias[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (m == 2 && esBisiesto(a))
+        return 29;
+    return dias[m - 1];
 }
 
+// pasa al dia siguiente
 void siguienteDia(int &d, int &m, int &a) {
     d++;
     if (d > diasDelMes(m, a)) {
@@ -34,92 +36,115 @@ void siguienteDia(int &d, int &m, int &a) {
     }
 }
 
-// ---------- programa principal ----------
+// arma el nombre: comandas_dd-mm-aaaa.dat
+void armarNombre(char nombre[], int d, int m, int a) {
+    strcpy(nombre, "comandas_00-00-0000.dat");
+    nombre[9] = '0' + d / 10;
+    nombre[10] = '0' + d % 10;
+    nombre[12] = '0' + m / 10;
+    nombre[13] = '0' + m % 10;
+    nombre[15] = '0' + a / 1000;
+    nombre[16] = '0' + a / 100 % 10;
+    nombre[17] = '0' + a / 10 % 10;
+    nombre[18] = '0' + a % 10;
+}
+
+// arma el nombre: comandas_semana_sX-mm.dat
+void armarNombreSemana(char nombre[], int semana, int mes) {
+    strcpy(nombre, "comandas_semana_s");
+    int i = 17;
+    if (semana > 9) {
+        nombre[i] = '0' + semana / 10;
+        i++;
+    }
+    nombre[i] = '0' + semana % 10;
+    i++;
+    nombre[i] = '-';
+    nombre[i + 1] = '0' + mes / 10;
+    nombre[i + 2] = '0' + mes % 10;
+    strcpy(nombre + i + 3, ".dat");
+}
+
+// devuelve la posicion del archivo que tiene el menor idMozo (-1 si no queda ninguno)
+int buscarMenor(Comanda actual[], int leido[]) {
+    int menor = -1;
+    for (int i = 0; i < DIAS; i++) {
+        if (leido[i] == 1) {
+            if (menor == -1 || actual[i].idMozo < actual[menor].idMozo)
+                menor = i;
+        }
+    }
+    return menor;
+}
 
 int main() {
     int d, m, a;
     int semana, mesSemana;
 
-    printf("=== Cierre semanal ===\n");
-    printf("Fecha del primer dia de la semana (dd mm aaaa): ");
-    if (scanf("%d %d %d", &d, &m, &a) != 3 || m < 1 || m > 12 ||
-        d < 1 || d > diasDelMes(m, a)) {
-        printf("Fecha invalida.\n");
+    cout << "Cierre semanal" << endl;
+    cout << "Primer dia de la semana (dd mm aaaa): ";
+    cin >> d >> m >> a;
+    if (m < 1 || m > 12 || d < 1 || d > diasDelMes(m, a)) {
+        cout << "Fecha invalida" << endl;
         return 1;
     }
-    printf("Numero de semana (X) y mes (mm) para el nombre del archivo: ");
-    if (scanf("%d %d", &semana, &mesSemana) != 2) {
-        printf("Datos invalidos.\n");
+    cout << "Numero de semana y mes: ";
+    cin >> semana >> mesSemana;
+    if (semana < 1 || semana > 99 || mesSemana < 1 || mesSemana > 12) {
+        cout << "Datos invalidos" << endl;
         return 1;
     }
 
-    // 1) Abrir las planillas de cada dia. Si un dia no tiene planilla
-    //    (no se cargaron ventas), simplemente se saltea.
-    FILE *dia[DIAS_SEMANA];
-    Comanda actual[DIAS_SEMANA];
-    bool hayRegistro[DIAS_SEMANA];
+    FILE *dias[DIAS];
+    Comanda actual[DIAS];
+    int leido[DIAS];
     int abiertos = 0;
+    char nombre[50];
 
-    for (int i = 0; i < DIAS_SEMANA; i++) {
-        char nombre[64];
-        snprintf(nombre, sizeof(nombre), "comandas_%02d-%02d-%04d.dat", d, m, a);
-        dia[i] = fopen(nombre, "rb");
-        hayRegistro[i] = false;
-        if (dia[i] != NULL) {
-            abiertos++;
-            // lectura inicial (la "primera lectura" del apareo)
-            hayRegistro[i] = (fread(&actual[i], sizeof(Comanda), 1, dia[i]) == 1);
+    // abro los archivos de los 7 dias
+    for (int i = 0; i < DIAS; i++) {
+        armarNombre(nombre, d, m, a);
+        dias[i] = fopen(nombre, "rb");
+        leido[i] = 0;
+        if (dias[i] == NULL) {
+            cout << "No existe " << nombre << endl;
         } else {
-            printf("Aviso: no existe %s, se saltea ese dia.\n", nombre);
+            abiertos++;
+            leido[i] = fread(&actual[i], sizeof(Comanda), 1, dias[i]);
         }
         siguienteDia(d, m, a);
     }
 
     if (abiertos == 0) {
-        printf("No se encontro ninguna planilla diaria. No se genera la semanal.\n");
+        cout << "No hay ningun archivo, no se genera la semanal" << endl;
         return 1;
     }
 
-    // 2) Crear la planilla semanal
-    char nombreSemana[64];
-    snprintf(nombreSemana, sizeof(nombreSemana), "comandas_semana_s%d-%02d.dat",
-             semana, mesSemana);
-    FILE *sem = fopen(nombreSemana, "wb");
-    if (sem == NULL) {
-        printf("No se pudo crear %s\n", nombreSemana);
-        for (int i = 0; i < DIAS_SEMANA; i++)
-            if (dia[i] != NULL) fclose(dia[i]);
+    char nombreSemana[50];
+    armarNombreSemana(nombreSemana, semana, mesSemana);
+    FILE *semanal = fopen(nombreSemana, "wb");
+    if (semanal == NULL) {
+        cout << "No se pudo crear " << nombreSemana << endl;
         return 1;
     }
 
-    // 3) Apareo: mientras quede algun archivo con registros, escribir el
-    //    de menor idMozo. Con "<" estricto, ante un empate gana el dia mas
-    //    temprano (queda un orden estable).
-    int escritos = 0;
-    while (true) {
-        int menor = -1;
-        for (int i = 0; i < DIAS_SEMANA; i++) {
-            if (hayRegistro[i] &&
-                (menor == -1 || actual[i].idMozo < actual[menor].idMozo)) {
-                menor = i;
-            }
-        }
-        if (menor == -1) break;  // todos los archivos se terminaron
-
-        fwrite(&actual[menor], sizeof(Comanda), 1, sem);
-        escritos++;
-
-        // avanzar solo en el archivo del que saque el registro
-        hayRegistro[menor] =
-            (fread(&actual[menor], sizeof(Comanda), 1, dia[menor]) == 1);
+    // apareo
+    int cant = 0;
+    int menor = buscarMenor(actual, leido);
+    while (menor != -1) {
+        fwrite(&actual[menor], sizeof(Comanda), 1, semanal);
+        cant++;
+        leido[menor] = fread(&actual[menor], sizeof(Comanda), 1, dias[menor]);
+        menor = buscarMenor(actual, leido);
     }
 
-    // 4) Cerrar todo
-    fclose(sem);
-    for (int i = 0; i < DIAS_SEMANA; i++)
-        if (dia[i] != NULL) fclose(dia[i]);
+    // cierro todo
+    fclose(semanal);
+    for (int i = 0; i < DIAS; i++) {
+        if (dias[i] != NULL)
+            fclose(dias[i]);
+    }
 
-    printf("Listo: %d ventas de %d dia(s) guardadas en %s\n", escritos, abiertos,
-           nombreSemana);
+    cout << "Se guardaron " << cant << " ventas en " << nombreSemana << endl;
     return 0;
 }
